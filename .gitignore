@@ -1,0 +1,7 @@
+/.venv
+/.vscode
+/debug.log
+/keyrings.cryptfile
+/logging.conf
+/test.json
+/test1.json
