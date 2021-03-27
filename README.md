@@ -69,7 +69,8 @@ The solution is
 ## Configuration
 
 All parameters are stored in a configuration file _battery.conf_ an example can be seen below
-'''
+
+```
 [economy7]
 starttime=0035
 endtime=0430
@@ -88,61 +89,63 @@ towinter=16
 
 [givcloud]
 system=giv
-id=DLocke
-'''
+id=loginID
+
+```
 
 # Run
 
 The program is executed as a pythod program :-
-'''
+
+```
 battery.py -d <configdir>
-'''
+```
 
 where <configdir> is the directory that contains the confugration file battey.conf
 
 ## Log output
 
 Below is an example of the log output from the program
-'''
-2021-03-26 23:00:06,939 - battery.determinePreCharge - INFO - hour 0 cloudcvr 46 use -0.20 precharge -0.20 gen0 high 0
-2021-03-26 23:00:06,939 - battery.determinePreCharge - INFO - hour 1 cloudcvr 16 use -0.40 precharge -0.40 gen0 high 0
-2021-03-26 23:00:06,939 - battery.determinePreCharge - INFO - hour 2 cloudcvr 54 use -0.60 precharge -0.60 gen0 high 0
-2021-03-26 23:00:06,939 - battery.determinePreCharge - INFO - hour 3 cloudcvr 69 use -0.80 precharge -0.80 gen0 high 0
-2021-03-26 23:00:06,940 - battery.determinePreCharge - INFO - hour 4 cloudcvr 75 use -1.00 precharge -1.00 gen0 high 0
-2021-03-26 23:00:06,940 - battery.determinePreCharge - INFO - hour 5 cloudcvr 61 use -1.20 precharge -1.20 gen0 high 0
-2021-03-26 23:00:06,940 - battery.determinePreCharge - INFO - hour 6 cloudcvr 52 use -1.60 precharge -1.60 gen0 high 0
-2021-03-26 23:00:06,940 - battery.determinePreCharge - INFO - hour 7 cloudcvr 19 use -2.00 precharge -2.00 gen0 high 0
-2021-03-26 23:00:06,940 - battery.determinePreCharge - INFO - hour 8 cloudcvr 44 use -2.40 precharge -2.40 gen0 high 0
-2021-03-26 23:00:06,941 - battery.determinePreCharge - INFO - hour 9 cloudcvr 45 use -1.70 precharge -2.40 gen1.1000000000000001 high 0
-2021-03-26 23:00:06,941 - battery.determinePreCharge - INFO - hour 10 cloudcvr 45 use -1.00 precharge -2.40 gen1.1000000000000001 high 0
-2021-03-26 23:00:06,941 - battery.determinePreCharge - INFO - hour 11 cloudcvr 41 use -0.22 precharge -2.40 gen1.1799999999999999 high 0
-2021-03-26 23:00:06,941 - battery.determinePreCharge - INFO - hour 12 cloudcvr 50 use 0.38 precharge -2.40 gen1.0 high 0.38000000000000045
-2021-03-26 23:00:06,941 - battery.determinePreCharge - INFO - hour 13 cloudcvr 97 use 0.04 precharge -2.40 gen0.059999999999999998 high 0.38000000000000045
-2021-03-26 23:00:06,942 - battery.determinePreCharge - INFO - hour 14 cloudcvr 98 use -0.32 precharge -2.40 gen0.040000000000000001 high 0.38000000000000045
-2021-03-26 23:00:06,942 - battery.determinePreCharge - INFO - hour 15 cloudcvr 99 use -0.70 precharge -2.40 gen0.02 high 0.38000000000000045
-2021-03-26 23:00:06,942 - battery.determinePreCharge - INFO - hour 16 cloudcvr 99 use -1.08 precharge -2.40 gen0.02 high 0.38000000000000045
-2021-03-26 23:00:06,942 - battery.determinePreCharge - INFO - hour 17 cloudcvr 99 use -1.48 precharge -2.40 gen0 high 0.38000000000000045
-2021-03-26 23:00:06,942 - battery.determinePreCharge - INFO - hour 18 cloudcvr 99 use -2.98 precharge -2.98 gen0 high 0.38000000000000045
-2021-03-26 23:00:06,943 - battery.determinePreCharge - INFO - hour 19 cloudcvr 100 use -4.48 precharge -4.48 gen0 high 0.38000000000000045
-2021-03-26 23:00:06,943 - battery.determinePreCharge - INFO - hour 20 cloudcvr 100 use -4.88 precharge -4.88 gen0 high 0.38000000000000045
-2021-03-26 23:00:06,943 - battery.determinePreCharge - INFO - hour 21 cloudcvr 100 use -5.28 precharge -5.28 gen0 high 0.38000000000000045
-2021-03-26 23:00:06,943 - battery.determinePreCharge - INFO - hour 22 cloudcvr 100 use -5.68 precharge -5.68 gen0 high 0.38000000000000045
-2021-03-26 23:00:06,943 - battery.determinePreCharge - INFO - hour 23 cloudcvr 100 use -6.08 precharge -6.08 gen0 high 0.38000000000000045
-2021-03-26 23:00:06,944 - battery.determinePreCharge - INFO - Tomorrow set min battery charge to 87
-2021-03-26 23:00:06,944 - battery.determinePreCharge - INFO - Tomorrow additional spare capacity 0kWh
-2021-03-26 23:00:06,944 - givAutomate.setChromeDriverRemote - INFO - using remote web driver: http://127.0.0.1:4444/wd/hub
-2021-03-26 23:00:09,050 - givAutomate.configBatteryCharge - INFO - Set Giv to charge between 0035 & 0430 charging to 87%
-2021-03-26 23:00:09,050 - utils.getKr - ERROR - getlogger /volume1/homes/automate/scripts/battery.conf
-NoneType: None
-2021-03-26 23:00:12,824 - givAutomate.configBatteryCharge - INFO - using account id DLocke
-2021-03-26 23:00:12,851 - givAutomate.configBatteryCharge - INFO - At web page Login page - GivEnergy Cloud
-2021-03-26 23:00:13,638 - givAutomate.configBatteryCharge - INFO - Press Login
-2021-03-26 23:00:24,072 - givAutomate.configBatteryCharge - INFO - At web page David Locke - GivEnergy Cloud
-2021-03-26 23:00:30,456 - givAutomate.configBatteryCharge - INFO - At web page Monitor information - GivEnergy Cloud
-2021-03-26 23:00:31,479 - givAutomate.configBatteryCharge - INFO - Smart charge selected? True
-2021-03-26 23:00:36,726 - givAutomate.configBatteryCharge - INFO - Successfully set Giv to charge between 0035 & 0430 charging to 87%
-2021-03-26 23:00:36,727 - givAutomate.configBatteryCharge - INFO - close webdriver
-'''
+
+```
+INFO - hour 0 cloudcvr 46 use -0.20 precharge -0.20 gen0 high 0
+INFO - hour 1 cloudcvr 16 use -0.40 precharge -0.40 gen0 high 0
+INFO - hour 2 cloudcvr 54 use -0.60 precharge -0.60 gen0 high 0
+INFO - hour 3 cloudcvr 69 use -0.80 precharge -0.80 gen0 high 0
+INFO - hour 4 cloudcvr 75 use -1.00 precharge -1.00 gen0 high 0
+INFO - hour 5 cloudcvr 61 use -1.20 precharge -1.20 gen0 high 0
+INFO - hour 6 cloudcvr 52 use -1.60 precharge -1.60 gen0 high 0
+INFO - hour 7 cloudcvr 19 use -2.00 precharge -2.00 gen0 high 0
+INFO - hour 8 cloudcvr 44 use -2.40 precharge -2.40 gen0 high 0
+INFO - hour 9 cloudcvr 45 use -1.70 precharge -2.40 gen1.1000000000000001 high 0
+INFO - hour 10 cloudcvr 45 use -1.00 precharge -2.40 gen1.1000000000000001 high 0
+INFO - hour 11 cloudcvr 41 use -0.22 precharge -2.40 gen1.1799999999999999 high 0
+INFO - hour 12 cloudcvr 50 use 0.38 precharge -2.40 gen1.0 high 0.38000000000000045
+INFO - hour 13 cloudcvr 97 use 0.04 precharge -2.40 gen0.059999999999999998 high 0.38000000000000045
+INFO - hour 14 cloudcvr 98 use -0.32 precharge -2.40 gen0.040000000000000001 high 0.38000000000000045
+INFO - hour 15 cloudcvr 99 use -0.70 precharge -2.40 gen0.02 high 0.38000000000000045
+INFO - hour 16 cloudcvr 99 use -1.08 precharge -2.40 gen0.02 high 0.38000000000000045
+INFO - hour 17 cloudcvr 99 use -1.48 precharge -2.40 gen0 high 0.38000000000000045
+INFO - hour 18 cloudcvr 99 use -2.98 precharge -2.98 gen0 high 0.38000000000000045
+INFO - hour 19 cloudcvr 100 use -4.48 precharge -4.48 gen0 high 0.38000000000000045
+INFO - hour 20 cloudcvr 100 use -4.88 precharge -4.88 gen0 high 0.38000000000000045
+INFO - hour 21 cloudcvr 100 use -5.28 precharge -5.28 gen0 high 0.38000000000000045
+INFO - hour 22 cloudcvr 100 use -5.68 precharge -5.68 gen0 high 0.38000000000000045
+INFO - hour 23 cloudcvr 100 use -6.08 precharge -6.08 gen0 high 0.38000000000000045
+INFO - Tomorrow set min battery charge to 87
+INFO - Tomorrow additional spare capacity 0kWh
+INFO - using remote web driver: http://127.0.0.1:4444/wd/hub
+INFO - Set Giv to charge between 0035 & 0430 charging to 87%
+ERROR - getlogger /volume1/homes/automate/scripts/battery.conf
+INFO - using account id xxxxx
+INFO - At web page Login page - GivEnergy Cloud
+INFO - Press Login
+INFO - At web page David Locke - GivEnergy Cloud
+INFO - At web page Monitor information - GivEnergy Cloud
+INFO - Smart charge selected? True
+INFO - Successfully set Giv to charge between 0035 & 0430 charging to 87%
+INFO - close webdriver
+```
 
 # Todo
 
