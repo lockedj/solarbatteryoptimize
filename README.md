@@ -1,4 +1,4 @@
-# Optimise Charging of Home Battery Storage
+# Optimise Charging of Home Battery
 
 The aim of the project is to optimise the charging of a home energy store (battery) to maximise the use of solar energy generation. Where the forecast does not predict enough will be generated the fall back configures a control system to pre-charge the battery with the minimum amount of cheap rate electricity needed before solar takes over.
 
