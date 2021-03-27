@@ -1,6 +1,6 @@
 # Optimise Charging of Home Battery Storage
 
-The aim of the project is to optimise the charging of home battery storage to use as much solar energy generation as possible. Where the forecast does not predict enough will be generated the fall back is configure the control system to pre-charge the battery with the minimum amount cheap rate electricity needed before solar takes over.
+The aim of the project is to optimise the charging of a home energy store (battery) to maximise the use of solar energy generation. Where the forecast does not predict enough will be generated the fall back configures a control system to pre-charge the battery with the minimum amount of cheap rate electricity needed before solar takes over.
 
 ## Objectives
 
@@ -15,35 +15,38 @@ The project was built for the following home configuration but the concepts and 
 
 - 4kwh solar generation through a Fronius inverter
 - 8.2kw GivEnergy lipo battery and inverter
-- Immersun to divert excess energy to heat the hot water
-  -- This works independantly of the control system and only diverts excess to the hot water cylinder when the battery is charged and there is excess capacity the house is not using
+- Immersun to divert excess energy to heat water using the immersion element in the hot water cylinder.
+  - This works independantly of the control system and only diverts excess to the hot water cylinder when the battery is charged and there is excess capacity the house is not using
 - Octopus Go tarriff to provide cheap rate (economy 7) electricity during the night
-- Synology NAS that runs 24 by 7. This runs the control logic to optimise the battery charge.
+- Synology NAS that runs 24 by 7.
+  - The control logic to optimise the battery charge is to set to run automatically several times a day
 
 ## Solution
 
 The solution uses the following data :-
 
-- Use the weather forecast for the next day to predict how much energy can be generated from the solar system for every daylight hour
-- Take into account diffrent daylight hours across the year
-- Expected eenergy use of the home for each hour of a 24 hour period
+- The weather forecast for the next day to predict how much energy can be generated from the solar system for every daylight hour
+- Take into account varying daylight hours across the year
+- Expected eenergy use of the home for each hour of the day
 - Max charge solar can deliver to the battery per hour
-- Max charge the battery can sustain
+- Capacity of the battery
 - Min level the battery should be charged to
 - Time period for cheap rate electricity
 
-This data is used to determine how much the the battery needs to be pre-charged using cheap rate (economy 7) electricity between 00:30 and 04:30. In basic terms, on an hour by hour basis it looks at
+This data is used to determine how much the battery needs to be pre-charged using cheap rate (economy 7) electricity between 00:30 and 04:30. On an hour by hour basis it looks at
 
-- the energy needs of the house
-- how much energy is generated each hour
-  resulting in
-- a percentage that the battery needs to be pre-charged
-- a prediction of how much "excess" energy will be generated
+- The energy needs of the house
+- How much energy is generated each hour
+
+Resulting in
+
+- A percentage that the battery needs to be pre-charged
+- A prediction of how much "excess" energy will be generated and available
 
 The program then updates the GivEnergy control system to:-
 
-- Run -Mode 1 Dynamic- make the most of solar generation
-- Run -Battery Smart Charge- Mode
+- Run _Mode 1 Dynamic_ make the most of solar generation
+- Run _Battery Smart Charge_ Mode
 - Set the start and end time to pre-charge the battery
 - Set the percentage to pre-charge the battery
 
@@ -53,20 +56,20 @@ The solution is
 
 - Written in python
 - Runs in a docker container on a Synology NAS
-  -- It runs a few times in the hours leading up to the start of the cheap rate electricity with a view to using the most upto date weather forecast
-  -- For testing it runs from pthon command ine on windows
+  - It runs a few times in the hours leading up to the start of the cheap rate electricity with a view to using the most upto date weather forecast
+  - For testing it runs from in VS Code and from a python command line on windows
 - Calls [openweathermap](https://openweathermap.org/api) to get the weather forecast for each hour of the next day.
-  -- To determine how much energy the solar panels will generate the cloud cover for each hour is used
+  - To determine how much energy the solar panels will generate the cloud cover for each hour is used
 - Uses [Selenium](https://www.selenium.dev/) a screen scraping technology to access the GivEnergy cloud control panel
-  -- Programmatically navigates the web interface as though it was a human and sets the control parameters
-  -- **Note** screen scraping was used as no API was available at the time. GivEnergy are working to provide an API which will dramatically simplifiy the program once available.
+  - Programmatically navigates the web interface as though it was a human and sets the control parameters
+  - **Note** screen scraping was used as no API was available at the time. GivEnergy are working to provide an API which will dramatically simplifiy the program once available.
 - Uses [keyrings.cryptfile](https://pypi.org/project/keyrings.cryptfile/) to access credntials needed to access the GivEnergy cloud.
 - Uses python logging module for all output which is also used for debugging.
 
 ## Configuration
 
 All parameters are stored in a configuration file _battery.conf_ an example can be seen below
-¦¦¦
+'''
 [economy7]
 starttime=0035
 endtime=0430
@@ -86,21 +89,21 @@ towinter=16
 [givcloud]
 system=giv
 id=DLocke
-¦¦¦
+'''
 
 # Run
 
 The program is executed as a pythod program :-
-¦¦¦
+'''
 battery.py -d <configdir>
-¦¦¦
+'''
 
 where <configdir> is the directory that contains the confugration file battey.conf
 
 ## Log output
 
 Below is an example of the log output from the program
-¦¦¦
+'''
 2021-03-26 23:00:06,939 - battery.determinePreCharge - INFO - hour 0 cloudcvr 46 use -0.20 precharge -0.20 gen0 high 0
 2021-03-26 23:00:06,939 - battery.determinePreCharge - INFO - hour 1 cloudcvr 16 use -0.40 precharge -0.40 gen0 high 0
 2021-03-26 23:00:06,939 - battery.determinePreCharge - INFO - hour 2 cloudcvr 54 use -0.60 precharge -0.60 gen0 high 0
@@ -139,7 +142,7 @@ NoneType: None
 2021-03-26 23:00:31,479 - givAutomate.configBatteryCharge - INFO - Smart charge selected? True
 2021-03-26 23:00:36,726 - givAutomate.configBatteryCharge - INFO - Successfully set Giv to charge between 0035 & 0430 charging to 87%
 2021-03-26 23:00:36,727 - givAutomate.configBatteryCharge - INFO - close webdriver
-¦¦¦
+'''
 
 # Todo
 
