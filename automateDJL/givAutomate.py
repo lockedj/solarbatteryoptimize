@@ -121,8 +121,9 @@ class GivAutomate:
                     if elem.is_selected() == False:
                         elem.click()
 
-                    elem = self.driver.find_element_by_xpath(
-                        "(//button[@type='button'])[5]")
+#                    elem = self.driver.find_element_by_xpath(
+#                        "(//button[@type='button'])[5]")
+                    elem = self.driver.find_element_by_id("confirmBSC")
                     elem.click()
 
                     time.sleep(5)  # wait 5 seconds for action to take place
