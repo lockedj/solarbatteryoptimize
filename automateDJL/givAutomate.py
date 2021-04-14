@@ -135,6 +135,8 @@ class GivAutomate:
                         f"Successfully set Giv to charge between {fromTime} & {toTime} charging to {maxCharge}%")
                     break
                 elif elem.text.startswith("SETTING"):
+                    self.logger.info(
+                        f"Waiting for update action to complated attempt {i} status is {elem.text} trying again")
                     act = False
                     i = i + 1
                     time.sleep(5)
