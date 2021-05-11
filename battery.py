@@ -107,11 +107,11 @@ class Battery:
         # basic house use and to charge the battery.
         while hr < 24:
             use = use - float(self.houseuse[hr])    # Subtract house use
+            gen = 0                                 # default gnerated is 0
             if hr >= cloudfrom and hr <= cloudto:   # If daylight hour
                 if clouds[hr] < 100:
                     gen = self.hourlycharge*((100-clouds[hr])/100)
-            else:
-                gen = 0                             # no daylight so no gen
+                    # no daylight so no gen
             use = use + gen                         # total of house use + generated
 
             if use < charge:                        # If demand is greater than current precharge
@@ -134,13 +134,16 @@ class Battery:
         # by the battery. This can then be used for other devices like the dishwasher..
         spare = 0       # additional solar capacity over and above needs of battery
         while hr < 24:
+            gen = 0
             use = use - float(self.houseuse[hr])    # Subtract house use
             if hr >= cloudfrom and hr <= cloudto:   # If daylight houg
                 if clouds[hr] < 100:
                     gen = self.hourlycharge*((100-clouds[hr])/100)
-                    spare = spare + gen                 # add in generation
+                    houseuse = float(self.houseuse[hr])
+                    if gen > houseuse:
+                        spare = spare + gen - houseuse   # add in generation
             logging.getLogger().info(
-                f"hour {hr} cloudcvr {clouds[hr]} spare {spare:0.2f} gen{gen:0.2f}")
+                f"hour {hr} cloudcvr {clouds[hr]} spare {spare:0.2f} gen {gen:0.2f}")
             hr = hr+1
 
         charge = -charge
