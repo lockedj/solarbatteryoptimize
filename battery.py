@@ -104,7 +104,12 @@ class Battery:
         charge = 0      # Min kWh to pre-charge the battery
 
         # First calculate if there is enough forecast solar radiation to both cover
-        # basic house use and to charge the battery.
+        # basic house use and to charge the battery. The result of the calculation is
+        # the min the battery neds to be charged from the grid to ensure the house
+        # does not need to use the grid outside of cheaprate/economy 7 electriciy (either
+        # through solar generated electriciy of use of the battery)
+        # Note: there are times when this is not possible on days when there is not much
+        # sun and the battery is not big enough to cover the house use
         while hr < 24:
             use = use - float(self.houseuse[hr])    # Subtract house use
             gen = 0                                 # default gnerated is 0
@@ -118,6 +123,10 @@ class Battery:
                 charge = use                        # set pre-charge to demand
             if use > highcharge:                       # Remember high use
                 highcharge = use
+
+            logging.getLogger().info(
+                f"hour {hr} cloudcvr {clouds[hr]} use {use:0.2f} precharge {charge:0.2f} gen {gen:0.2f} high {highcharge:0.2f}")
+
             if -charge > self.maxcharge:            # If precharge needed is more than
                 # set precharge to max capacity
                 charge = -int(self.maxcharge)
@@ -126,8 +135,6 @@ class Battery:
             if (highcharge - charge) >= self.maxcharge:  # If gen more than capacity then
                 hr = hr+1
                 break                               # stop as precharge known
-            logging.getLogger().info(
-                f"hour {hr} cloudcvr {clouds[hr]} use {use:0.2f} precharge {charge:0.2f} gen {gen:0.2f} high {highcharge:0.2f}")
             hr = hr+1
 
         # calculate additional solar capacity over and above what is needed

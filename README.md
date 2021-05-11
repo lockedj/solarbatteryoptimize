@@ -122,6 +122,7 @@ Below is an example of the log output from the program
 2021-05-11 19:45:34,772 - battery.determinePreCharge - INFO - hour 10 cloudcvr 10 use 2.48 precharge -2.00 gen 1.80 high 2.48
 2021-05-11 19:45:34,773 - battery.determinePreCharge - INFO - hour 11 cloudcvr 19 use 3.70 precharge -2.00 gen 1.62 high 3.70
 2021-05-11 19:45:34,774 - battery.determinePreCharge - INFO - hour 12 cloudcvr 31 use 4.68 precharge -2.00 gen 1.38 high 4.68
+2021-05-11 19:59:21,336 - battery.determinePreCharge - INFO - hour 13 cloudcvr 42 use 5.44 precharge -2.00 gen 1.16 high 5.44
 2021-05-11 19:45:34,774 - battery.determinePreCharge - INFO - hour 14 cloudcvr 98 spare 0.00 gen 0.04
 2021-05-11 19:45:34,775 - battery.determinePreCharge - INFO - hour 15 cloudcvr 99 spare 0.00 gen 0.02
 2021-05-11 19:45:34,775 - battery.determinePreCharge - INFO - hour 16 cloudcvr 99 spare 0.00 gen 0.02
