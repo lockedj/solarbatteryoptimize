@@ -11,8 +11,12 @@ from automateDJL import utils
 import time
 import logging
 
-# TODO
-# - set the charge level and hours
+# -This module uses screen scraping to access the giv web portal,
+# navigate to the config settings page and to set the battery
+# charge, start, end and charge to percent.
+#
+# NOTE: This module is now redundent as GIV have implemented a public
+# API that enables the battery settings to be queried and set.
 
 
 class GivAutomate:

@@ -9,6 +9,8 @@ import sys
 import getopt
 import math
 from datetime import time, timedelta, datetime, date
+import http.client
+import json
 
 # todo - update NAS to run daily
 # todo - web site to show output
@@ -21,15 +23,16 @@ class Battery:
     # Must run this the day before to set the giv controller config
     # prior to cheap rate energy period
 
-    def __init__(self, dir):
+    def __init__(self, dir, file):
         self.configdir = dir
+        self.configfile = file
         self.loadConfig()
         return
 
     def loadConfig(self):
         try:
             config = configparser.ConfigParser()
-            config.read(self.configdir+"battery.conf")
+            config.read(self.configdir+self.configfile)
             self.cloudfromsummer = config.getint(
                 "daylight", "fromsummer", fallback=8)
             self.cloudtosummer = config.getint(
@@ -53,6 +56,7 @@ class Battery:
                 "economy7", "endtime", fallback="0430")
             self.givsystem = config.get("givcloud", "system")
             self.givid = config.get("givcloud", "id")
+            self.apitoken = config.get("givcloud", "apitoken")
             # self.givpwd = config.get("givcloud", "pwd")
         except:
             logging.getLogger().exception(
@@ -60,8 +64,8 @@ class Battery:
         return
 
     def determineEndTime(self, precharge):
-        # Work out end time to stop pre-charging the battery - no need using more
-        # from grid than needed
+        # Work out end time to stop pre-charging the battery - no need to use more
+        # from the grid than needed
         chargekwh = (precharge/100) * self.maxcharge
         timerequired = chargekwh / self.gridhourlycharge
         addhours = math.floor(timerequired)
@@ -121,7 +125,7 @@ class Battery:
 
             if use < charge:                        # If demand is greater than current precharge
                 charge = use                        # set pre-charge to demand
-            if use > highcharge:                       # Remember high use
+            if use > highcharge:                    # Remember high use
                 highcharge = use
 
             logging.getLogger().info(
@@ -157,26 +161,56 @@ class Battery:
 
         chargePercent = int(round((charge/self.maxcharge)*100))
         logging.getLogger().info(
-            "Tomorrow set min battery charge to {}".format(chargePercent))
+            "Tomorrow set min battery charge to {}%".format(chargePercent))
         logging.getLogger().info(
-            "Tomorrow additional spare capacity {}kWh".format(spare))
+            f"Tomorrow additional spare capacity {spare:0.2f}kWh")
 
         return chargePercent
+
+    def configBatteryCharge(self, cheapRateFrom, chargeToTime, charge):
+        conn = http.client.HTTPSConnection("api.givenergy.cloud")
+
+        payload = json.dumps({
+            "enable": True,
+            "start": cheapRateFrom,
+            "finish": chargeToTime,
+            "chargeToPercent": charge
+        })
+        headers = {
+            'Authorization': self.apitoken,
+            'Content-Type': 'application/json'
+        }
+        conn.request("POST", "/chargeBattery", payload, headers)
+        res = conn.getresponse()
+        data = res.read()
+        result = data.decode("utf-8")
+        if result == "Changes Set":
+            logging.getLogger().info(
+                f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%")
+        else:
+            logging.getLogger().error("Failed to set charge: {}".format(result))
+
+        return
 
 
 def main(argv):
     configdir = ''
+    configfile = "dlbattery.conf"
+#   configfile = "battery.conf"
+
     try:
-        opts, args = getopt.getopt(argv, "hd:", ["cdir="])
+        opts, args = getopt.getopt(argv, "hd:f:", ["cdir="])
     except getopt.GetoptError:
-        print('battery.py -d <configdir>')
+        print('battery.py -d <configdir> -c <configfile>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('battery.py -d <configdir>')
+            print('battery.py -d <configdir> -c <configfile>')
             sys.exit()
         elif opt in ("-d", "--cdir"):
             configdir = arg + "/"
+        elif opt in ("-c", "--cfile"):
+            configfile = arg
 
     logging.config.fileConfig(fname=configdir+'logging.conf',
                               disable_existing_loggers=False)
@@ -185,20 +219,26 @@ def main(argv):
     logger.debug("Start configure solar battery economy 7 charge ")
 
     try:
-        battery = Battery(configdir)
+        battery = Battery(configdir, configfile)
         charge = battery.determinePreCharge()
         chargeToTime = battery.determineEndTime(charge)
+        # Update the giv control system with charge times and volumes
+        battery.configBatteryCharge(battery.cheapRateFrom,
+                                    chargeToTime, charge)
 
         # Update the giv control system with charge volume.  If on dev machine use local web driver,
         # if on NAS then need to use remote web driver to access the docker
         # container running selenium
-        giv = givAutomate.GivAutomate(configdir)
-        if platform.system() == "Windows":
-            giv.setChromeDriverLocal()
-        else:
-            giv.setChromeDriverRemote()
-        giv.configBatteryCharge(battery.cheapRateFrom,
-                                chargeToTime, charge)
+        # NOTE the old screen scraping approach is no longer needed as there is
+        # an API now available to read and configured the battery control system
+        #giv = givAutomate.GivAutomate(configdir)
+        # if platform.system() == "Windows":
+        #    giv.setChromeDriverLocal()
+        # else:
+        #    giv.setChromeDriverRemote()
+        # giv.configBatteryCharge(battery.cheapRateFrom,
+        #                        chargeToTime, charge)
+
     except:
         logger.exception("giv update failed")
         raise

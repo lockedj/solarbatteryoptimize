@@ -1,6 +1,6 @@
 # Optimise Charge of Home Battery Maximising Use Of Solar Energy
 
-The aim of the project is to optimise the charging of a home energy store (battery) to maximise the use of solar energy generation. Where the forecast does not predict enough will be generated the fall back configures a control system to pre-charge the battery with the minimum amount of cheap rate electricity needed before solar takes over.
+The aim of the project is to optimise the charging of a home energy store (battery) to maximise the use of solar energy generation. Where the forecast does not predict enough will be generated the fall back configures a battery control system to pre-charge the battery with the minimum amount of cheap rate electricity needed before solar takes over.
 
 ## Objectives
 
@@ -27,21 +27,22 @@ The solution uses the following data :-
 
 - The weather forecast for the next day to predict how much energy can be generated from the solar system for every daylight hour
 - Take into account varying daylight hours across the year
-- Expected eenergy use of the home for each hour of the day
+- Expected energy use of the home for each hour of the day
 - Max charge solar can deliver to the battery per hour
 - Capacity of the battery
 - Min level the battery should be charged to
 - Time period for cheap rate electricity
 
-This data is used to determine how much the battery needs to be pre-charged using cheap rate (economy 7) electricity between 00:30 and 04:30. On an hour by hour basis it looks at
+This data is used to determine how much the battery needs to be pre-charged using cheap rate (economy 7) electricity in octopus go cheap rate hours (00:30 and 04:30). On an hour by hour basis it looks at
 
 - The energy needs of the house
-- How much energy is generated each hour
+- How much energy is expected to be generated each hour
 
 Resulting in
 
 - A percentage that the battery needs to be pre-charged
 - A prediction of how much "excess" energy will be generated and available
+- The period the battery should pull cheap rate energy from the grid
 
 The program then updates the GivEnergy control system to:-
 
@@ -91,6 +92,7 @@ towinter=16
 [givcloud]
 system=giv
 id=loginID
+apitoken=givcloud token returned from signup post method
 
 ```
 
@@ -99,10 +101,11 @@ id=loginID
 The program is executed as a pythod program :-
 
 ```
-battery.py -d <configdir>
+battery.py -d <configdir> -d <configfile>
 ```
 
-where <configdir> is the directory that contains the confugration file battey.conf
+where <configdir> is the directory that contains the confugration file
+and <configfile> is the name of the config file
 
 ## Log output
 
@@ -153,3 +156,8 @@ Following are a list of future items to be worked given some spare time
 
 - Rework to use GivEnergy API rather than screen scrape the web interface
 - Setup HomeAssistant and create a dashboard related to control program and its output
+
+# History
+
+- 12/05/21 Prior to May 21 the program used [Selenium](https://www.selenium.dev/) a screen scraping technology to access the GivEnergy cloud control panel. The program
+  programmatically navigates the web interface as though it was a human and sets the control parameters. With the advent of the giv cloud API this technique is no longer required and the program has been greatly simplified by using the API.
