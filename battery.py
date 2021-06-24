@@ -1,4 +1,4 @@
-from automateDJL import weather, givAutomate
+from automateDJL import weather
 import platform
 import logging
 import logging.config
@@ -182,14 +182,20 @@ class Battery:
         }
         conn.request("POST", "/chargeBattery", payload, headers)
         res = conn.getresponse()
-        data = res.read()
-        result = data.decode("utf-8")
-        if result == "Changes Set":
-            logging.getLogger().info(
-                f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%")
+        if res.status == 200:
+            data = res.read()
+            result = data.decode("utf-8")
+            logging.getLogger().info(f"HTTP response {result}")
+            jsonres = json.loads(result)
+            # if result == "Changes Set":
+            if jsonres["chargeFlag"] == "1":
+                logging.getLogger().info(
+                    f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%")
+            else:
+                logging.getLogger().error("Failed to set charge: {}".format(result))
         else:
-            logging.getLogger().error("Failed to set charge: {}".format(result))
-
+            logging.getLogger().error(
+                f"HTTP request to charge battery failed: {res.status} {res.reason}")
         return
 
 
