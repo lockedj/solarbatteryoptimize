@@ -41,19 +41,21 @@ class Battery:
                 "daylight", "fromwinter", fallback=9)
             self.cloudtowinter = config.getint(
                 "daylight", "towinter", fallback=16)
-            self.preCharge = config.getint("battery", "mincharge", fallback=30)
+            self.preCharge = config.getint("battery", "mincharge", fallback=25)
             self.hourlycharge = config.getint(
                 "battery", "solarhourlycharge", fallback=2)
             self.gridhourlycharge = config.getfloat(
                 "battery", "gridhourlycharge", fallback=2.5)
             self.maxcharge = config.getfloat(
-                "battery", "maxcharge", fallback=7.0)
+                "battery", "maxcharge", fallback=15.0)
             self.houseuse = config.get(
                 "battery", "houseuse").split(",")
             self.cheapRateFrom = config.get(
-                "economy7", "starttime", fallback="0030")
+                "economy7", "starttime", fallback="2330")
             self.cheapRateTo = config.get(
-                "economy7", "endtime", fallback="0430")
+                "economy7", "endtime", fallback="0230")
+            self.maxChargeHours = config.getfloat(
+                "economy7", "maxchargehours", fallback="3.0")
             self.givsystem = config.get("givcloud", "system")
             self.givid = config.get("givcloud", "id")
             self.apitoken = config.get("givcloud", "apitoken")
@@ -68,6 +70,8 @@ class Battery:
         # from the grid than needed
         chargekwh = (precharge/100) * self.maxcharge
         timerequired = chargekwh / self.gridhourlycharge
+        if timerequired > self.maxChargeHours-.25:
+            timerequired = self.maxChargeHours-.25
         addhours = math.floor(timerequired)
         remaintime = timerequired-addhours
         addmins = 0
@@ -196,6 +200,9 @@ class Battery:
         else:
             logging.getLogger().error(
                 f"HTTP request to charge battery failed: {res.status} {res.reason}")
+            data = res.read()
+            result = data.decode("utf-8")
+            logging.getLogger().info(f"HTTP response {result}")
         return
 
 
