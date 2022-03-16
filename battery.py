@@ -41,7 +41,7 @@ class Battery:
                 "daylight", "fromwinter", fallback=9)
             self.cloudtowinter = config.getint(
                 "daylight", "towinter", fallback=16)
-            self.preCharge = config.getint("battery", "mincharge", fallback=25)
+            self.minCharge = config.getint("battery", "mincharge", fallback=25)
             self.hourlycharge = config.getint(
                 "battery", "solarhourlycharge", fallback=2)
             self.gridhourlycharge = config.getfloat(
@@ -166,6 +166,12 @@ class Battery:
         chargePercent = int(round((charge/self.maxcharge)*100))
         logging.getLogger().info(
             "Tomorrow set min battery charge to {}%".format(chargePercent))
+
+        if chargePercent < self.minCharge:
+            chargePercent = self.minCharge
+            logging.getLogger().info(
+                "Min charge below min allowed so adjusted to {}%".format(chargePercent))
+
         logging.getLogger().info(
             f"Tomorrow additional spare capacity {spare:0.2f}kWh")
 
