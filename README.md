@@ -14,10 +14,10 @@ The main objectives
 The project was built for the following home configuration but the concepts and much of the code are developed with portability to other home configurations in mind
 
 - 4kwh solar generation through a Fronius inverter
-- 8.2kw GivEnergy lipo battery and inverter
+- 8.2kw GivEnergy lipo battery and inverter (a 2nd 8.2kw battery has been added)
 - Immersun to divert excess energy to heat water using the immersion element in the hot water cylinder.
   - This works independantly of the control system and only diverts excess to the hot water cylinder when the battery is charged and there is excess capacity the house is not using
-- Octopus Go tarriff to provide cheap rate (economy 7) electricity during the night
+- Octopus Go faster tarriff to provide cheap rate (economy 7) electricity during the night.
 - Synology NAS that runs 24 by 7.
   - The control logic to optimise the battery charge is to set to run automatically several times a day
 
@@ -33,10 +33,10 @@ The solution uses the following data :-
 - Min level the battery should be charged to
 - Time period for cheap rate electricity
 
-This data is used to determine how much the battery needs to be pre-charged using cheap rate (economy 7) electricity in octopus go cheap rate hours (00:30 and 04:30). On an hour by hour basis it looks at
+This data is used to determine how much the battery needs to be pre-charged using cheap rate (economy 7) electricity in octopus go faster cheap rate hours (00:30 and 04:30). On an hour by hour basis it looks at
 
 - The energy needs of the house
-- How much energy is expected to be generated each hour
+- How much energy is expected to be generated each hour of the next day
 
 Resulting in
 
@@ -58,12 +58,11 @@ The solution is
 - Written in python
 - Runs in a docker container on a Synology NAS
   - It runs a few times in the hours leading up to the start of the cheap rate electricity with a view to using the most upto date weather forecast
-  - For testing it runs from in VS Code and from a python command line on windows
+  - For testing it runs in VS Code and from a python command line on windows
 - Calls [openweathermap](https://openweathermap.org/api) to get the weather forecast for each hour of the next day.
   - To determine how much energy the solar panels will generate the cloud cover for each hour is used
-- Uses [Selenium](https://www.selenium.dev/) a screen scraping technology to access the GivEnergy cloud control panel
-  - Programmatically navigates the web interface as though it was a human and sets the control parameters
-  - **Note** screen scraping was used as no API was available at the time. GivEnergy are working to provide an API which will dramatically simplifiy the program once available.
+- Claculatge the required amount the battery needs to be charged to based on predicated cloud cover.
+- Uses python http and the GivEnergy V1 API to update the inverter to charge the battery to the calculated amount
 - Uses [keyrings.cryptfile](https://pypi.org/project/keyrings.cryptfile/) to access credntials needed to access the GivEnergy cloud.
 - Uses python logging module for all output which is also used for debugging.
 
@@ -73,8 +72,8 @@ All parameters are stored in a configuration file _battery.conf_ an example can 
 
 ```
 [economy7]
-starttime=0035
-endtime=0430
+starttime=00:35
+endtime=04:30
 
 [battery]
 mincharge=30
@@ -91,8 +90,8 @@ towinter=16
 
 [givcloud]
 system=giv
-id=loginID
-apitoken=givcloud token returned from signup post method
+id=giv loginID
+apitoken=givcloud API token from Giv web portal
 
 ```
 
@@ -112,52 +111,46 @@ and <configfile> is the name of the config file
 Below is an example of the log output from the program
 
 ```
-2021-05-11 19:45:34,767 - battery.determinePreCharge - INFO - hour 0 cloudcvr 29 use -0.20 precharge -0.20 gen 0.00 high 0.00
-2021-05-11 19:45:34,768 - battery.determinePreCharge - INFO - hour 1 cloudcvr 36 use -0.40 precharge -0.40 gen 0.00 high 0.00
-2021-05-11 19:45:34,768 - battery.determinePreCharge - INFO - hour 2 cloudcvr 35 use -0.60 precharge -0.60 gen 0.00 high 0.00
-2021-05-11 19:45:34,768 - battery.determinePreCharge - INFO - hour 3 cloudcvr 27 use -0.80 precharge -0.80 gen 0.00 high 0.00
-2021-05-11 19:45:34,769 - battery.determinePreCharge - INFO - hour 4 cloudcvr 24 use -1.00 precharge -1.00 gen 0.00 high 0.00
-2021-05-11 19:45:34,769 - battery.determinePreCharge - INFO - hour 5 cloudcvr 19 use -1.20 precharge -1.20 gen 0.00 high 0.00
-2021-05-11 19:45:34,769 - battery.determinePreCharge - INFO - hour 6 cloudcvr 16 use -1.60 precharge -1.60 gen 0.00 high 0.00
-2021-05-11 19:45:34,770 - battery.determinePreCharge - INFO - hour 7 cloudcvr 13 use -2.00 precharge -2.00 gen 0.00 high 0.00
-2021-05-11 19:45:34,771 - battery.determinePreCharge - INFO - hour 8 cloudcvr 1 use -0.42 precharge -2.00 gen 1.98 high 0.00
-2021-05-11 19:45:34,771 - battery.determinePreCharge - INFO - hour 9 cloudcvr 5 use 1.08 precharge -2.00 gen 1.90 high 1.08
-2021-05-11 19:45:34,772 - battery.determinePreCharge - INFO - hour 10 cloudcvr 10 use 2.48 precharge -2.00 gen 1.80 high 2.48
-2021-05-11 19:45:34,773 - battery.determinePreCharge - INFO - hour 11 cloudcvr 19 use 3.70 precharge -2.00 gen 1.62 high 3.70
-2021-05-11 19:45:34,774 - battery.determinePreCharge - INFO - hour 12 cloudcvr 31 use 4.68 precharge -2.00 gen 1.38 high 4.68
-2021-05-11 19:59:21,336 - battery.determinePreCharge - INFO - hour 13 cloudcvr 42 use 5.44 precharge -2.00 gen 1.16 high 5.44
-2021-05-11 19:45:34,774 - battery.determinePreCharge - INFO - hour 14 cloudcvr 98 spare 0.00 gen 0.04
-2021-05-11 19:45:34,775 - battery.determinePreCharge - INFO - hour 15 cloudcvr 99 spare 0.00 gen 0.02
-2021-05-11 19:45:34,775 - battery.determinePreCharge - INFO - hour 16 cloudcvr 99 spare 0.00 gen 0.02
-2021-05-11 19:45:34,776 - battery.determinePreCharge - INFO - hour 17 cloudcvr 99 spare 0.00 gen 0.02
-2021-05-11 19:45:34,777 - battery.determinePreCharge - INFO - hour 18 cloudcvr 100 spare 0.00 gen 0.00
-2021-05-11 19:45:34,777 - battery.determinePreCharge - INFO - hour 19 cloudcvr 100 spare 0.00 gen 0.00
-2021-05-11 19:45:34,778 - battery.determinePreCharge - INFO - hour 20 cloudcvr 100 spare 0.00 gen 0.00
-2021-05-11 19:45:34,779 - battery.determinePreCharge - INFO - hour 21 cloudcvr 100 spare 0.00 gen 0.00
-2021-05-11 19:45:34,779 - battery.determinePreCharge - INFO - hour 22 cloudcvr 100 spare 0.00 gen 0.00
-2021-05-11 19:45:34,780 - battery.determinePreCharge - INFO - hour 23 cloudcvr 100 spare 0.00 gen 0.00
-2021-05-11 19:45:34,781 - battery.determinePreCharge - INFO - Tomorrow set min battery charge to 29
-2021-05-11 19:45:34,781 - battery.determinePreCharge - INFO - Tomorrow additional spare capacity 0kWh
-2021-05-11 19:45:34,782 - givAutomate.setChromeDriverLocal - INFO - using local chrome web driver
-2021-05-11 19:45:35,925 - givAutomate.configBatteryCharge - INFO - Set Giv to charge between 0035 & 0135 charging to 29%
-2021-05-11 19:45:37,021 - givAutomate.configBatteryCharge - INFO - using account id xxxxx
-2021-05-11 19:45:37,027 - givAutomate.configBatteryCharge - INFO - At web page Login page - GivEnergy Cloud
-2021-05-11 19:45:37,272 - givAutomate.configBatteryCharge - INFO - Press Login
-2021-05-11 19:45:43,365 - givAutomate.configBatteryCharge - INFO - At web page xxxxx - GivEnergy Cloud
-2021-05-11 19:45:48,971 - givAutomate.configBatteryCharge - INFO - At web page Monitor information - GivEnergy Cloud
-2021-05-11 19:45:49,312 - givAutomate.configBatteryCharge - INFO - Smart charge selected? True
-2021-05-11 19:45:54,426 - givAutomate.configBatteryCharge - INFO - Successfully set Giv to charge between 0035 & 0135 charging to 29%
-2021-05-11 19:45:54,427 - givAutomate.configBatteryCharge - INFO - close webdriver
+C:\Python39\python.exe' 'c:\Users\locke\.vscode\extensions\ms-python.python-2022.4.1\pythonFiles\lib\python\debugpy\launcher' '63385' '--' 'c:\Users\locke\Documents\Projects\HomeSolar\battery.py'
+2022-04-27 11:07:52,405 - battery.determinePreCharge - INFO - hour 0 cloudcvr 87 use -0.30 precharge -0.30 gen 0.00 high 0.00
+2022-04-27 11:07:52,405 - battery.determinePreCharge - INFO - hour 1 cloudcvr 89 use -0.60 precharge -0.60 gen 0.00 high 0.00
+2022-04-27 11:07:52,405 - battery.determinePreCharge - INFO - hour 2 cloudcvr 15 use -0.90 precharge -0.90 gen 0.00 high 0.00
+2022-04-27 11:07:52,406 - battery.determinePreCharge - INFO - hour 3 cloudcvr 12 use -1.20 precharge -1.20 gen 0.00 high 0.00
+2022-04-27 11:07:52,406 - battery.determinePreCharge - INFO - hour 4 cloudcvr 12 use -1.50 precharge -1.50 gen 0.00 high 0.00
+2022-04-27 11:07:52,406 - battery.determinePreCharge - INFO - hour 5 cloudcvr 20 use -1.80 precharge -1.80 gen 0.00 high 0.00
+2022-04-27 11:07:52,407 - battery.determinePreCharge - INFO - hour 6 cloudcvr 22 use -2.20 precharge -2.20 gen 0.00 high 0.00
+2022-04-27 11:07:52,407 - battery.determinePreCharge - INFO - hour 7 cloudcvr 28 use -3.10 precharge -3.10 gen 0.00 high 0.00
+2022-04-27 11:07:52,407 - battery.determinePreCharge - INFO - hour 8 cloudcvr 88 use -3.76 precharge -3.76 gen 0.24 high 0.00
+2022-04-27 11:07:52,407 - battery.determinePreCharge - INFO - hour 9 cloudcvr 90 use -3.96 precharge -3.96 gen 0.20 high 0.00
+2022-04-27 11:07:52,407 - battery.determinePreCharge - INFO - hour 10 cloudcvr 80 use -3.96 precharge -3.96 gen 0.40 high 0.00
+2022-04-27 11:07:52,408 - battery.determinePreCharge - INFO - hour 11 cloudcvr 83 use -4.02 precharge -4.02 gen 0.34 high 0.00
+2022-04-27 11:07:52,408 - battery.determinePreCharge - INFO - hour 12 cloudcvr 87 use -4.16 precharge -4.16 gen 0.26 high 0.00
+2022-04-27 11:07:52,408 - battery.determinePreCharge - INFO - hour 13 cloudcvr 88 use -4.32 precharge -4.32 gen 0.24 high 0.00
+2022-04-27 11:07:52,408 - battery.determinePreCharge - INFO - hour 14 cloudcvr 100 use -4.72 precharge -4.72 gen 0.00 high 0.00
+2022-04-27 11:07:52,408 - battery.determinePreCharge - INFO - hour 15 cloudcvr 100 use -5.12 precharge -5.12 gen 0.00 high 0.00
+2022-04-27 11:07:52,408 - battery.determinePreCharge - INFO - hour 16 cloudcvr 100 use -5.52 precharge -5.52 gen 0.00 high 0.00
+2022-04-27 11:07:52,409 - battery.determinePreCharge - INFO - hour 17 cloudcvr 100 use -5.92 precharge -5.92 gen 0.00 high 0.00
+2022-04-27 11:07:52,409 - battery.determinePreCharge - INFO - hour 18 cloudcvr 100 use -7.92 precharge -7.92 gen 0.00 high 0.00
+2022-04-27 11:07:52,409 - battery.determinePreCharge - INFO - hour 19 cloudcvr 100 use -9.42 precharge -9.42 gen 0.00 high 0.00
+2022-04-27 11:07:52,410 - battery.determinePreCharge - INFO - hour 20 cloudcvr 100 use -10.22 precharge -10.22 gen 0.00 high 0.00
+2022-04-27 11:07:52,410 - battery.determinePreCharge - INFO - hour 21 cloudcvr 100 use -11.02 precharge -11.02 gen 0.00 high 0.00
+2022-04-27 11:07:52,411 - battery.determinePreCharge - INFO - hour 22 cloudcvr 100 use -11.52 precharge -11.52 gen 0.00 high 0.00
+2022-04-27 11:07:52,411 - battery.determinePreCharge - INFO - hour 23 cloudcvr 100 use -11.92 precharge -11.92 gen 0.00 high 0.00
+2022-04-27 11:07:52,412 - battery.determinePreCharge - INFO - Tomorrow set min battery charge to 79%
+2022-04-27 11:07:52,412 - battery.determinePreCharge - INFO - Tomorrow additional spare capacity 0.00kWh
+2022-04-27 11:07:56,311 - battery.configBatteryCharge - INFO - HTTP response {"data":{"success":true,"message":"Written Successfully"}}
+2022-04-27 11:07:56,312 - battery.configBatteryCharge - INFO - Successfully set Giv to charge between 23:30 & 02:30 charging to 79%
+
 ```
 
 # Todo
 
 Following are a list of future items to be worked given some spare time
 
-- Rework to use GivEnergy API rather than screen scrape the web interface
 - Setup HomeAssistant and create a dashboard related to control program and its output
+- Experiment with solcast solar forecast. (Not in any rush as the openweathermap api and hourly cloud forecast as given good results)
 
 # History
 
-- 12/05/21 Prior to May 21 the program used [Selenium](https://www.selenium.dev/) a screen scraping technology to access the GivEnergy cloud control panel. The program
-  programmatically navigates the web interface as though it was a human and sets the control parameters. With the advent of the giv cloud API this technique is no longer required and the program has been greatly simplified by using the API.
+- 12/05/21 Prior to May 21 the program used [Selenium](https://www.selenium.dev/) a screen scraping technology to access the GivEnergy cloud control panel. Selenium was used to programmatically navigate the web interface as though it was a human and to set the control parameters. With the advent of the giv cloud beta API this technique is no longer required and the program has been greatly simplified by using the API.
+- 27/04/21 Updated to use the GivEnergy V1 API along with some small tweaks and tidyig up.

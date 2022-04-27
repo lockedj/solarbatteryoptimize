@@ -51,9 +51,9 @@ class Battery:
             self.houseuse = config.get(
                 "battery", "houseuse").split(",")
             self.cheapRateFrom = config.get(
-                "economy7", "starttime", fallback="2330")
+                "economy7", "starttime", fallback="23:30")
             self.cheapRateTo = config.get(
-                "economy7", "endtime", fallback="0230")
+                "economy7", "endtime", fallback="02:30")
             self.maxChargeHours = config.getfloat(
                 "economy7", "maxchargehours", fallback="3.0")
             self.givsystem = config.get("givcloud", "system")
@@ -85,11 +85,12 @@ class Battery:
             addhours = addhours+1
 
         starttime = time(
-            hour=int(self.cheapRateFrom[0:2]), minute=int(self.cheapRateFrom[2:4]))
+            hour=int(self.cheapRateFrom[0:2]), minute=int(self.cheapRateFrom[3:5]))
         startdate = datetime.combine(date.today(), starttime)
         td = timedelta(seconds=(addhours*60*60)+(addmins*60))
         enddate = startdate+td
-        endtime = enddate.strftime('%H%M')
+        endtime = enddate.strftime('%H:%M')
+        # note old giv beta api used time format hhmm  with no :
         return endtime
 
     def determinePreCharge(self):
@@ -177,7 +178,12 @@ class Battery:
 
         return chargePercent
 
-    def configBatteryCharge(self, cheapRateFrom, chargeToTime, charge):
+    def configBatteryChargeBetaAPI(self, cheapRateFrom, chargeToTime, charge):
+        # Use the Giv Beta  REST API to update charge time and percent
+        # Note: this API will be deprecated, this method has been left in the source until
+        # the V1 API has been prooven.  (see configBatteryCharge method)
+        # Note the beta API used a time format of hhmm  the v1 api uses hh:mm and code changes
+        # have been made to accomodate
         conn = http.client.HTTPSConnection("api.givenergy.cloud")
 
         payload = json.dumps({
@@ -199,6 +205,43 @@ class Battery:
             jsonres = json.loads(result)
             # if result == "Changes Set":
             if jsonres["chargeFlag"] == "1":
+                logging.getLogger().info(
+                    f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%")
+            else:
+                logging.getLogger().error("Failed to set charge: {}".format(result))
+        else:
+            logging.getLogger().error(
+                f"HTTP request to charge battery failed: {res.status} {res.reason}")
+            data = res.read()
+            result = data.decode("utf-8")
+            logging.getLogger().info(f"HTTP response {result}")
+        return
+
+    def configBatteryCharge(self, cheapRateFrom, chargeToTime, charge):
+        # Use the Giv V1 REST API to update charge time and percent
+        conn = http.client.HTTPSConnection("api.givenergy.cloud")
+
+        payload = json.dumps({
+            "enabled": True,
+            "start_time": cheapRateFrom,
+            "end_time": chargeToTime,
+            "percent_limit": charge
+        })
+        headers = {
+            'Authorization': 'Bearer '+self.apitoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+        conn.request("POST", "/v1/inverter/CE2029G044/presets/1?=",
+                     payload, headers)
+        res = conn.getresponse()
+        if res.status == 201:
+            data = res.read()
+            result = data.decode("utf-8")
+            logging.getLogger().info(f"HTTP response {result}")
+            jsonres = json.loads(result)
+            # if result == "Changes Set":
+            if jsonres["data"]["success"] == True:
                 logging.getLogger().info(
                     f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%")
             else:
