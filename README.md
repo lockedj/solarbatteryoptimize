@@ -153,4 +153,5 @@ Following are a list of future items to be worked given some spare time
 # History
 
 - 12/05/21 Prior to May 21 the program used [Selenium](https://www.selenium.dev/) a screen scraping technology to access the GivEnergy cloud control panel. Selenium was used to programmatically navigate the web interface as though it was a human and to set the control parameters. With the advent of the giv cloud beta API this technique is no longer required and the program has been greatly simplified by using the API.
-- 27/04/21 Updated to use the GivEnergy V1 API along with some small tweaks and tidyig up.
+- 27/04/22 Updated to use the GivEnergy V1 API along with some small tweaks and tidyig up.
+- 20/06/22 When GiVTCP runs it keeps the inverter busy which means calls to the cloud api can fail with inverter busy. Added retry logic around the cloud api call.

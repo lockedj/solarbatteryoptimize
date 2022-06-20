@@ -11,10 +11,9 @@ import math
 from datetime import time, timedelta, datetime, date
 import http.client
 import json
+import time as timer
 
-# todo - update NAS to run daily
 # todo - web site to show output
-# todo - run chrome in headless mode
 
 
 class Battery:
@@ -219,6 +218,8 @@ class Battery:
 
     def configBatteryCharge(self, cheapRateFrom, chargeToTime, charge):
         # Use the Giv V1 REST API to update charge time and percent
+        # If the inverter is busy processing other commands such as givtcp it
+        # may fail with timeout.  To workaround this there is a retry loop.
         conn = http.client.HTTPSConnection("api.givenergy.cloud")
 
         payload = json.dumps({
@@ -232,26 +233,36 @@ class Battery:
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
-        conn.request("POST", "/v1/inverter/CE2029G044/presets/1?=",
-                     payload, headers)
-        res = conn.getresponse()
-        if res.status == 201:
-            data = res.read()
-            result = data.decode("utf-8")
-            logging.getLogger().info(f"HTTP response {result}")
-            jsonres = json.loads(result)
-            # if result == "Changes Set":
-            if jsonres["data"]["success"] == True:
-                logging.getLogger().info(
-                    f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%")
+        maxtry = 10
+        retrycount = 0
+
+        while (retrycount < maxtry):
+            retrycount += 1
+            conn.request(
+                "POST", "/v1/inverter/CE2029G044/presets/1?=", payload, headers)
+            res = conn.getresponse()
+            if res.status == 201:
+                data = res.read()
+                result = data.decode("utf-8")
+                logging.getLogger().info(f"HTTP response {result}")
+                jsonres = json.loads(result)
+                # if result == "Changes Set":
+                if jsonres["data"]["success"] == True:
+                    logging.getLogger().info(
+                        f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%")
+                    retrycount = maxtry
+                else:
+                    logging.getLogger().error(
+                        f"Failed to set charge: {result} attempt {retrycount}")
             else:
-                logging.getLogger().error("Failed to set charge: {}".format(result))
-        else:
-            logging.getLogger().error(
-                f"HTTP request to charge battery failed: {res.status} {res.reason}")
-            data = res.read()
-            result = data.decode("utf-8")
-            logging.getLogger().info(f"HTTP response {result}")
+                logging.getLogger().error(
+                    f"HTTP request to charge battery failed: {res.status} {res.reason} attempt {retrycount}")
+                data = res.read()
+                result = data.decode("utf-8")
+                logging.getLogger().info(f"HTTP response {result}")
+            if retrycount < maxtry:
+                # sleep a little before trying again
+                timer.sleep(1)
         return
 
 
@@ -293,7 +304,7 @@ def main(argv):
         # container running selenium
         # NOTE the old screen scraping approach is no longer needed as there is
         # an API now available to read and configured the battery control system
-        #giv = givAutomate.GivAutomate(configdir)
+        # giv = givAutomate.GivAutomate(configdir)
         # if platform.system() == "Windows":
         #    giv.setChromeDriverLocal()
         # else:
