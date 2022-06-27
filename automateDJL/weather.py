@@ -11,8 +11,16 @@ class Weather:
     # Must run this the day before to set the giv controller config
     # prior to cheap rate energy period
 
-    def __init__(self):
-        self.weatherAPIURL = "https://api.openweathermap.org/data/2.5/onecall?lat=50.973038&lon=-1.392743&appid=04590f5e833699ca5c80ff6d701660dd&units=metric&exclude=current,minutely,daily,alerts"
+    def __init__(self, gpslat, gpslong, apitoken):
+        self.weatherAPIURL = (
+            "https://api.openweathermap.org/data/2.5/onecall?lat="
+            + gpslat
+            + "lon="
+            + gpslong
+            + "&appid="
+            + apitoken
+            + "&units=metric&exclude=current,minutely,daily,alerts"
+        )
         self.weatherJSON = []
         self.logger = logging.getLogger("automateDJL")
 
@@ -38,7 +46,7 @@ class Weather:
 
             if dt.day != today:
                 nextDay = dt.day
-                #print("dt.hr {} cld {}".format(dt.hour, hour["clouds"]))
+                # print("dt.hr {} cld {}".format(dt.hour, hour["clouds"]))
                 clouds.append(hour["clouds"])
                 if dt.hour >= 23 and dt.day == nextDay:
                     break

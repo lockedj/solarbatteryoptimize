@@ -3,14 +3,17 @@ import platform
 import configparser
 import logging
 import keyring
+
 try:
     from keyrings.cryptfile.cryptfile import CryptFileKeyring
 except:
     pass
 
+# this module is now redundent as userid and credentials for givcloud are no longer
+# used.
+
 
 class Utils:
-
     def __init__(self, cfile="battery.conf"):
         self.configfile = cfile
         return
@@ -24,13 +27,13 @@ class Utils:
         return keyring.set_password(service, user, pwd)
 
     def getKr(self):
-        if os.name != 'nt':
-            #logging.getLogger().exception("getlogger "+self.configfile)
+        if os.name != "nt":
+            # logging.getLogger().exception("getlogger "+self.configfile)
             config = configparser.ConfigParser()
             config.read(self.configfile)
             sd = config.get("other", "startdate")
             pc = config.get("other", "postcode")
 
             kr = CryptFileKeyring()
-            kr.keyring_key = pc+platform.node()+os.name+sd+"!djl!"
+            kr.keyring_key = pc + platform.node() + os.name + sd + "!djl!"
             keyring.set_keyring(kr)

@@ -63,48 +63,63 @@ The solution is
   - To determine how much energy the solar panels will generate the cloud cover for each hour is used
 - Claculatge the required amount the battery needs to be charged to based on predicated cloud cover.
 - Uses python http and the GivEnergy V1 API to update the inverter to charge the battery to the calculated amount
-- Uses [keyrings.cryptfile](https://pypi.org/project/keyrings.cryptfile/) to access credntials needed to access the GivEnergy cloud.
 - Uses python logging module for all output which is also used for debugging.
 
 ## Configuration
 
-All parameters are stored in a configuration file _battery.conf_ an example can be seen below
+All parameters are stored in a configuration file _battery.conf_ an example can be seen below.
+
+- Copy the conf file and customise to meet your requirements
+- For waather forecast a free account can be created at https://openweathermap.org/ and
+  from there an API Key can be generated
+- An API Token needs to be generated on the giv cloud portal settings page
 
 ```
 [economy7]
-starttime=00:35
-endtime=04:30
+starttime=00:35           // Cheap rate electricity starts at
+endtime=04:30             // Cheap rate electricity ends at
 
 [battery]
-mincharge=30
-solarhourlycharge=2
-gridhourlycharge=2.5
-maxcharge=7.0
+mincharge=30              // Min to be charged to during cheap rate
+solarhourlycharge=2       // Max PV charge per hour assuming no clouds
+gridhourlycharge=2.5      // Charge per hour from the grid
+maxcharge=7.0             // Battery capacity or max to charge to
 houseuse=0.2,0.2,0.2,0.2,0.2,0.2,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,1.5,1.5,0.4,0.4,0.4,0.4
-
+                          // House energy profile by hour starting at minight in kwh
 [daylight]
-fromsummer=08
-tosummer=18
-fromwinter=09
-towinter=16
+fromsummer=08             // Start hour PV is generated from in summer
+tosummer=18               // Hour when PV stops in summer
+fromwinter=09             // Start hour PV is generated from in winter
+towinter=16               // Hour when PV gen stops in winter
 
 [givcloud]
 system=giv
-id=giv loginID
-apitoken=givcloud API token from Giv web portal
+id=<giv loginID>          // giv login ID
+apitoken=<givcloud API token from Giv web portal>
 
+[weather]
+openweatherapitoken=<api token from open weather api>
+
+[location]
+gpslat=your latitude
+gpslong=your longigtude
 ```
 
 # Run
 
-The program is executed as a pythod program :-
+The program is executed as a python program :-
 
 ```
-battery.py -d <configdir> -d <configfile>
+python battery.py -d <configdir> -d <configfile>
 ```
 
 where <configdir> is the directory that contains the confugration file
 and <configfile> is the name of the config file
+
+It should be scheduled to run prior to the start of the cheap rate electricity period. A  
+good approach is to schedule it to run at least once a day automatically on a device that
+runs 24/7, something like a NAS or Raspberry PI... Once set up it can be left to run 365 days
+a year, then sit back and watch the savings build up.
 
 ## Log output
 
@@ -147,7 +162,6 @@ C:\Python39\python.exe' 'c:\Users\locke\.vscode\extensions\ms-python.python-2022
 
 Following are a list of future items to be worked given some spare time
 
-- Setup HomeAssistant and create a dashboard related to control program and its output
 - Experiment with solcast solar forecast. (Not in any rush as the openweathermap api and hourly cloud forecast as given good results)
 
 # History
