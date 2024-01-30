@@ -78,12 +78,14 @@ All parameters are stored in a configuration file _battery.conf_ an example can 
 [economy7]
 starttime=00:35           // Cheap rate electricity starts at
 endtime=04:30             // Cheap rate electricity ends at
+maxchargehours=4.0        // Max number of hours to charge for
 
 [battery]
-mincharge=30              // Min to be charged to during cheap rate
+mincharge=30              // Min % to be charged to during cheap rate
+maxcharge=100             // Max % to charge battery to
 solarhourlycharge=2       // Max PV charge per hour assuming no clouds
 gridhourlycharge=2.5      // Charge per hour from the grid
-maxcharge=7.0             // Battery capacity or max to charge to
+maxchargekwh=7.0          // Battery capacity or max kwh to charge to
 houseuse=0.2,0.2,0.2,0.2,0.2,0.2,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,1.5,1.5,0.4,0.4,0.4,0.4
                           // House energy profile by hour starting at minight in kwh
 [daylight]
@@ -170,3 +172,4 @@ Following are a list of future items to be worked given some spare time
 - 27/04/22 Updated to use the GivEnergy V1 API along with some small tweaks and tidyig up.
 - 20/06/22 When GiVTCP runs it keeps the inverter busy which means calls to the cloud api can fail with inverter busy. Added retry logic around the cloud api call.
 - 27/06/22 Parametised house location and open weather maps api key. Updated the readme.
+- 30/01/24 change config parm maxcharge to maxchargekwh and add maxcharge which is a percentage
