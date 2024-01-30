@@ -37,13 +37,15 @@ class Battery:
             self.cloudfromwinter = config.getint("daylight", "fromwinter", fallback=9)
             self.cloudtowinter = config.getint("daylight", "towinter", fallback=16)
             self.minCharge = config.getint("battery", "mincharge", fallback=25)
+            self.maxCharge = config.getint("battery", "maxcharge", fallback=80)
+
             self.hourlycharge = config.getint(
                 "battery", "solarhourlycharge", fallback=2
             )
             self.gridhourlycharge = config.getfloat(
                 "battery", "gridhourlycharge", fallback=2.5
             )
-            self.maxcharge = config.getfloat("battery", "maxcharge", fallback=15.0)
+            self.maxchargekwh = config.getfloat("battery", "maxchargekwh", fallback=15.0)
             self.houseuse = config.get("battery", "houseuse").split(",")
             self.cheapRateFrom = config.get("economy7", "starttime", fallback="23:30")
             self.cheapRateTo = config.get("economy7", "endtime", fallback="02:30")
@@ -66,7 +68,7 @@ class Battery:
     def determineEndTime(self, precharge):
         # Work out end time to stop pre-charging the battery - no need to use more
         # from the grid than needed
-        chargekwh = (precharge / 100) * self.maxcharge
+        chargekwh = (precharge / 100) * self.maxchargekwh
         timerequired = chargekwh / self.gridhourlycharge
         if timerequired > self.maxChargeHours - 0.25:
             timerequired = self.maxChargeHours - 0.25
@@ -136,14 +138,14 @@ class Battery:
                 f"hour {hr} cloudcvr {clouds[hr]} use {use:0.2f} precharge {charge:0.2f} gen {gen:0.2f} high {highcharge:0.2f}"
             )
 
-            if -charge > self.maxcharge:  # If precharge needed is more than
+            if -charge > self.maxchargekwh:  # If precharge needed is more than
                 # set precharge to max capacity
-                charge = -int(self.maxcharge)
+                charge = -int(self.maxchargekwh)
                 hr = hr + 1
                 break  # needs max charge
             if (
                 highcharge - charge
-            ) >= self.maxcharge:  # If gen more than capacity then
+            ) >= self.maxchargekwh:  # If gen more than capacity then
                 hr = hr + 1
                 break  # stop as precharge known
             hr = hr + 1
@@ -167,7 +169,7 @@ class Battery:
 
         charge = -charge
 
-        chargePercent = int(round((charge / self.maxcharge) * 100))
+        chargePercent = int(round((charge / self.maxchargekwh) * 100))
         logging.getLogger().info(
             "Tomorrow set min battery charge to {}%".format(chargePercent)
         )
@@ -176,6 +178,12 @@ class Battery:
             chargePercent = self.minCharge
             logging.getLogger().info(
                 "Min charge below min allowed so adjusted to {}%".format(chargePercent)
+            )
+
+        if chargePercent > self.maxCharge:
+            chargePercent = self.maxCharge
+            logging.getLogger().info(
+                "Max charge more than max allowed so adjusted to {}%".format(chargePercent)
             )
 
         logging.getLogger().info(f"Tomorrow additional spare capacity {spare:0.2f}kWh")
