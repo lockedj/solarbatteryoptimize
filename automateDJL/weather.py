@@ -15,7 +15,7 @@ class Weather:
         self.weatherAPIURL = (
             "https://api.openweathermap.org/data/2.5/onecall?lat="
             + gpslat
-            + "lon="
+            + "&lon="
             + gpslong
             + "&appid="
             + apitoken
