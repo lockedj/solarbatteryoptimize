@@ -13,7 +13,7 @@ class Weather:
 
     def __init__(self, gpslat, gpslong, apitoken):
         self.weatherAPIURL = (
-            "https://api.openweathermap.org/data/2.5/onecall?lat="
+            "https://api.openweathermap.org/data/3.0/onecall?lat="
             + gpslat
             + "&lon="
             + gpslong
