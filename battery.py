@@ -32,33 +32,56 @@ class Battery:
         try:
             config = configparser.ConfigParser()
             config.read(self.configdir + self.configfile)
-            self.cloudfromsummer = config.getint("daylight", "fromsummer", fallback=8)
-            self.cloudtosummer = config.getint("daylight", "tosummer", fallback=18)
-            self.cloudfromwinter = config.getint("daylight", "fromwinter", fallback=9)
-            self.cloudtowinter = config.getint("daylight", "towinter", fallback=16)
-            self.minCharge = config.getint("battery", "mincharge", fallback=25)
-            self.maxCharge = config.getint("battery", "maxcharge", fallback=80)
-
+            self.cloudfromsummer = config.getint(
+                "daylight", "fromsummer", fallback=8)
+            self.cloudtosummer = config.getint(
+                "daylight", "tosummer", fallback=18)
+            self.cloudfromwinter = config.getint(
+                "daylight", "fromwinter", fallback=9)
+            self.cloudtowinter = config.getint(
+                "daylight", "towinter", fallback=16)
+            self.winterminCharge = config.getint(
+                "battery", "wintermincharge", fallback=50)
+            self.wintermaxCharge = config.getint(
+                "battery", "wintermaxcharge", fallback=90)
+            self.summerminCharge = config.getint(
+                "battery", "summermincharge", fallback=25)
+            self.summermaxCharge = config.getint(
+                "battery", "summermaxcharge", fallback=75)
             self.hourlycharge = config.getint(
-                "battery", "solarhourlycharge", fallback=2
-            )
+                "battery", "solarhourlycharge", fallback=2)
             self.gridhourlycharge = config.getfloat(
-                "battery", "gridhourlycharge", fallback=2.5
-            )
-            self.maxchargekwh = config.getfloat("battery", "maxchargekwh", fallback=15.0)
+                "battery", "gridhourlycharge", fallback=2.5)
+            self.maxchargekwh = config.getfloat(
+                "battery", "maxchargekwh", fallback=15.0)
             self.houseuse = config.get("battery", "houseuse").split(",")
-            self.cheapRateFrom = config.get("economy7", "starttime", fallback="23:30")
-            self.cheapRateTo = config.get("economy7", "endtime", fallback="02:30")
+            self.cheapRateFrom = config.get(
+                "economy7", "starttime", fallback="23:30")
+            self.cheapRateTo = config.get(
+                "economy7", "endtime", fallback="02:30")
             self.maxChargeHours = config.getfloat(
-                "economy7", "maxchargehours", fallback="3.0"
-            )
+                "economy7", "maxchargehours", fallback="3.0")
             self.givsystem = config.get("givcloud", "system")
             self.givid = config.get("givcloud", "id")
             self.apitoken = config.get("givcloud", "apitoken")
-            self.openweatherapitoken = config.get("weather", "openweatherapitoken")
+            self.openweatherapitoken = config.get(
+                "weather", "openweatherapitoken")
             self.gpslat = config.get("location", "gpslat")
             self.gpslong = config.get("location", "gpslong")
             # self.givpwd = config.get("givcloud", "pwd")
+            now = datetime.today()
+            month = now.month
+            if month >= 4 and month < 10:
+                self.cloudfrom = self.cloudfromsummer
+                self.cloudto = self.cloudtosummer
+                self.minCharge = self.summerminCharge
+                self.maxCharge = self.summermaxCharge
+            else:
+                self.cloudfrom = self.cloudfromwinter
+                self.cloudto = self.cloudtowinter
+                self.minCharge = self.winterminCharge
+                self.maxCharge = self.wintermaxCharge
+
         except:
             logging.getLogger().exception(
                 "Problem reading battery config file" + self.configdir + "battery.conf"
@@ -95,16 +118,9 @@ class Battery:
         return endtime
 
     def determinePreCharge(self):
-        now = datetime.today()
-        month = now.month
-        if month >= 4 and month < 10:
-            cloudfrom = self.cloudfromsummer
-            cloudto = self.cloudtosummer
-        else:
-            cloudfrom = self.cloudfromwinter
-            cloudto = self.cloudtowinter
 
-        forecast = weather.Weather(self.gpslat, self.gpslong, self.openweatherapitoken)
+        forecast = weather.Weather(
+            self.gpslat, self.gpslong, self.openweatherapitoken)
         clouds = forecast.cloudTomorrow()
 
         hr = 0  # hour of the day being processed
@@ -123,7 +139,7 @@ class Battery:
         while hr < 24:
             use = use - float(self.houseuse[hr])  # Subtract house use
             gen = 0  # default gnerated is 0
-            if hr >= cloudfrom and hr <= cloudto:  # If daylight hour
+            if hr >= self.cloudfrom and hr <= self.cloudto:  # If daylight hour
                 if clouds[hr] < 100:
                     gen = self.hourlycharge * ((100 - clouds[hr]) / 100)
                     # no daylight so no gen
@@ -135,7 +151,8 @@ class Battery:
                 highcharge = use
 
             logging.getLogger().info(
-                f"hour {hr} cloudcvr {clouds[hr]} use {use:0.2f} precharge {charge:0.2f} gen {gen:0.2f} high {highcharge:0.2f}"
+                f"hour {hr} cloudcvr {clouds[hr]} use {use:0.2f} precharge {
+                    charge:0.2f} gen {gen:0.2f} high {highcharge:0.2f}"
             )
 
             if -charge > self.maxchargekwh:  # If precharge needed is more than
@@ -156,14 +173,15 @@ class Battery:
         while hr < 24:
             gen = 0
             use = use - float(self.houseuse[hr])  # Subtract house use
-            if hr >= cloudfrom and hr <= cloudto:  # If daylight houg
+            if hr >= self.cloudfrom and hr <= self.cloudto:  # If daylight houg
                 if clouds[hr] < 100:
                     gen = self.hourlycharge * ((100 - clouds[hr]) / 100)
                     houseuse = float(self.houseuse[hr])
                     if gen > houseuse:
                         spare = spare + gen - houseuse  # add in generation
             logging.getLogger().info(
-                f"hour {hr} cloudcvr {clouds[hr]} spare {spare:0.2f} gen {gen:0.2f}"
+                f"hour {hr} cloudcvr {clouds[hr]} spare {
+                    spare:0.2f} gen {gen:0.2f}"
             )
             hr = hr + 1
 
@@ -177,16 +195,19 @@ class Battery:
         if chargePercent < self.minCharge:
             chargePercent = self.minCharge
             logging.getLogger().info(
-                "Min charge below min allowed so adjusted to {}%".format(chargePercent)
+                "Min charge below min allowed so adjusted to {}%".format(
+                    chargePercent)
             )
 
         if chargePercent > self.maxCharge:
             chargePercent = self.maxCharge
             logging.getLogger().info(
-                "Max charge more than max allowed so adjusted to {}%".format(chargePercent)
+                "Max charge more than max allowed so adjusted to {}%".format(
+                    chargePercent)
             )
 
-        logging.getLogger().info(f"Tomorrow additional spare capacity {spare:0.2f}kWh")
+        logging.getLogger().info(
+            f"Tomorrow additional spare capacity {spare:0.2f}kWh")
 
         return chargePercent
 
@@ -206,7 +227,8 @@ class Battery:
                 "chargeToPercent": charge,
             }
         )
-        headers = {"Authorization": self.apitoken, "Content-Type": "application/json"}
+        headers = {"Authorization": self.apitoken,
+                   "Content-Type": "application/json"}
         conn.request("POST", "/chargeBattery", payload, headers)
         res = conn.getresponse()
         if res.status == 200:
@@ -217,13 +239,15 @@ class Battery:
             # if result == "Changes Set":
             if jsonres["chargeFlag"] == "1":
                 logging.getLogger().info(
-                    f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%"
+                    f"Successfully set Giv to charge between {
+                        cheapRateFrom} & {chargeToTime} charging to {charge}%"
                 )
             else:
                 logging.getLogger().error("Failed to set charge: {}".format(result))
         else:
             logging.getLogger().error(
-                f"HTTP request to charge battery failed: {res.status} {res.reason}"
+                f"HTTP request to charge battery failed: {
+                    res.status} {res.reason}"
             )
             data = res.read()
             result = data.decode("utf-8")
@@ -266,7 +290,8 @@ class Battery:
                 # if result == "Changes Set":
                 if jsonres["data"]["success"] == True:
                     logging.getLogger().info(
-                        f"Successfully set Giv to charge between {cheapRateFrom} & {chargeToTime} charging to {charge}%"
+                        f"Successfully set Giv to charge between {
+                            cheapRateFrom} & {chargeToTime} charging to {charge}%"
                     )
                     retrycount = maxtry
                 else:
@@ -275,7 +300,8 @@ class Battery:
                     )
             else:
                 logging.getLogger().error(
-                    f"HTTP request to charge battery failed: {res.status} {res.reason} attempt {retrycount}"
+                    f"HTTP request to charge battery failed: {
+                        res.status} {res.reason} attempt {retrycount}"
                 )
                 data = res.read()
                 result = data.decode("utf-8")
@@ -317,7 +343,8 @@ def main(argv):
         charge = battery.determinePreCharge()
         chargeToTime = battery.determineEndTime(charge)
         # Update the giv control system with charge times and volumes
-        battery.configBatteryCharge(battery.cheapRateFrom, chargeToTime, charge)
+        battery.configBatteryCharge(
+            battery.cheapRateFrom, chargeToTime, charge)
 
         # Update the giv control system with charge volume.  If on dev machine use local web driver,
         # if on NAS then need to use remote web driver to access the docker
