@@ -180,8 +180,8 @@ class Battery:
                     if gen > houseuse:
                         spare = spare + gen - houseuse  # add in generation
             logging.getLogger().info(
-                f"hour {hr} cloudcvr {clouds[hr]} spare {
-                    spare:0.2f} gen {gen:0.2f}"
+                f"""hour {hr} cloudcvr {clouds[hr]} spare {
+                    spare:0.2f} gen {gen:0.2f}"""
             )
             hr = hr + 1
 
@@ -239,15 +239,15 @@ class Battery:
             # if result == "Changes Set":
             if jsonres["chargeFlag"] == "1":
                 logging.getLogger().info(
-                    f"Successfully set Giv to charge between {
-                        cheapRateFrom} & {chargeToTime} charging to {charge}%"
+                    f"""Successfully set Giv to charge between {
+                        cheapRateFrom} & {chargeToTime} charging to {charge}%"""
                 )
             else:
                 logging.getLogger().error("Failed to set charge: {}".format(result))
         else:
             logging.getLogger().error(
-                f"HTTP request to charge battery failed: {
-                    res.status} {res.reason}"
+                f"""HTTP request to charge battery failed: {
+                    res.status} {res.reason}"""
             )
             data = res.read()
             result = data.decode("utf-8")
@@ -290,8 +290,8 @@ class Battery:
                 # if result == "Changes Set":
                 if jsonres["data"]["success"] == True:
                     logging.getLogger().info(
-                        f"Successfully set Giv to charge between {
-                            cheapRateFrom} & {chargeToTime} charging to {charge}%"
+                        f"""Successfully set Giv to charge between {
+                            cheapRateFrom} & {chargeToTime} charging to {charge}%"""
                     )
                     retrycount = maxtry
                 else:
@@ -300,8 +300,8 @@ class Battery:
                     )
             else:
                 logging.getLogger().error(
-                    f"HTTP request to charge battery failed: {
-                        res.status} {res.reason} attempt {retrycount}"
+                    f"""HTTP request to charge battery failed: {
+                        res.status} {res.reason} attempt {retrycount}"""
                 )
                 data = res.read()
                 result = data.decode("utf-8")
