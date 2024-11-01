@@ -1,5 +1,6 @@
 /.venv
 /.vscode
+/venv
 /debug.log
 /keyrings.cryptfile
 /test.json

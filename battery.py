@@ -151,8 +151,8 @@ class Battery:
                 highcharge = use
 
             logging.getLogger().info(
-                f"hour {hr} cloudcvr {clouds[hr]} use {use:0.2f} precharge {
-                    charge:0.2f} gen {gen:0.2f} high {highcharge:0.2f}"
+                f"""hour {hr} cloudcvr {clouds[hr]} use {use:0.2f} precharge {
+                    charge:0.2f} gen {gen:0.2f} high {highcharge:0.2f}"""
             )
 
             if -charge > self.maxchargekwh:  # If precharge needed is more than
