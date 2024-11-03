@@ -274,6 +274,7 @@ class Battery:
             "Accept": "application/json",
         }
         maxtry = 10
+        sleeptime = 1
         retrycount = 0
 
         while retrycount < maxtry:
@@ -308,7 +309,8 @@ class Battery:
                 logging.getLogger().info(f"HTTP response {result}")
             if retrycount < maxtry:
                 # sleep a little before trying again
-                timer.sleep(1)
+                timer.sleep(sleeptime)
+                sleeptime = sleeptime * 2  # exponential backoff
         return
 
 
